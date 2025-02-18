@@ -1,5 +1,5 @@
 from aiogram import Bot
-from aiogram.types import BotCommand
+from aiogram.types import BotCommand, BotCommandScopeDefault, BotCommandScopeAllPrivateChats
 
 
 async def set_commands(bot: Bot):
@@ -34,4 +34,4 @@ async def set_commands(bot: Bot):
         )
     ]
 
-    await bot.set_my_commands(commands)
+    await bot.set_my_commands(commands, scope=BotCommandScopeAllPrivateChats())

@@ -8,14 +8,19 @@ from bot.commands import set_commands
 from config import TOKEN, admins_id
 from db import DB
 from bot.handlers.registration import router as reg_router
-
+from bot.handlers.raspisanie import router as rasp_router
+from bot.handlers.excel import router as excel_router
+from bot.handlers.communication import router as communication_router
 
 properties = DefaultBotProperties(parse_mode="html")
 
 
 bot = Bot(TOKEN, default=properties)
 dp = Dispatcher()
+dp.include_router(excel_router)
 dp.include_router(reg_router)
+dp.include_router(rasp_router)
+dp.include_router(communication_router)
 
 logger = logging.getLogger(__name__)
 

@@ -1,3 +1,12 @@
+import openpyxl
+from aiogram import Bot, types
+from openpyxl.cell import MergedCell
+
+from config import days_in_number
+from db import DB
+from parse.utils import cut_teach
+
+
 def cell_value(sheet, raw, col):
     cell = sheet[raw][col]
     coord = cell.coordinate
@@ -15,7 +24,7 @@ def cell_value(sheet, raw, col):
 
 
 
-def parse_kurs(col_begin):
+def parse_kurs(col_begin, db):
     book = openpyxl.open("xl.xlsx")  # открытие excel файла
     sheet = book.active  # делаем лист активным
 
@@ -84,23 +93,23 @@ def parse_kurs(col_begin):
             else:
                 row += 1
 
-        create_table_rasp(cell_value(sheet, 2, col))
+        db.create_table_rasp(cell_value(sheet, 2, col))
         for par in group_para:
-            add_rasp(par, cell_value(sheet, 2, col))
+            db.add_rasp(par, cell_value(sheet, 2, col))
 
         col += 1
         if col == sheet.max_column:
             break
 
 
-async def parse_xl():
+async def parse_xl(message: types.Message, db):
     book = openpyxl.open("xl.xlsx")
     sheet = book.active
     print(sheet.max_row)
     print(sheet.max_column)
     col_begin = 0
 
-    parse_kurs(col_begin)
+    parse_kurs(col_begin, db)
     for j in range(sheet.max_column):
         if (cell_value(sheet, 4, j)) is None:
             if cell_value(sheet, 4, j + 1) is None and cell_value(sheet, 4, j + 2) is None:
@@ -108,10 +117,12 @@ async def parse_xl():
 
             j += 1
             col_begin = j
-            parse_kurs(col_begin)
+            parse_kurs(col_begin, db)
+
+    await message.answer('Расписание изменено')
 
 
-def parse_spo():
+def parse_spo(db: DB):
     book = openpyxl.open("spo.xlsx")
     print("открыто")
     sheet = book.active  # делаем лист активным
@@ -195,9 +206,9 @@ def parse_spo():
             else:
                 row += 1
 
-        create_table_rasp("СПО")
+        db.create_table_rasp("СПО")
 
         for par in group_para:
-            add_rasp(par, "СПО")
+            db.add_rasp(par, "СПО")
 
         col += 1

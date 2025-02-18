@@ -134,7 +134,7 @@ async def reg_teacher(callback_query: types.CallbackQuery, callback_data: cb_tea
     await callback_query.answer()
 
     kb = InlineKeyboardBuilder()
-    kb.add(InlineKeyboardButton(text="Расписание", callback_data=cb_days(date=datetime.date.today().strftime('%d%M%Y')).pack()))
+    kb.add(InlineKeyboardButton(text="Расписание", callback_data=cb_days(date=datetime.date.today().strftime('%d.%m.%Y')).pack()))
     kb.add(InlineKeyboardButton(text="Назад", callback_data=cb_pag_teacher(pag=0).pack()))
     kb.adjust(1)
     text = f"""Супер! \nРегистрация прошла успешно\n<i>Поиск по преподавателю ({user[3]})</i> \n\nТак же /communication позволит Вам узнать номера деканата и кафедр и связаться с нами если обнаружите ошибку :)"""
@@ -158,7 +158,7 @@ async def user_reg(callback_query: types.CallbackQuery, callback_data: cb_group,
 
     kb = InlineKeyboardBuilder()
 
-    kb.add(InlineKeyboardButton(text="Расписание", callback_data=cb_days(date=datetime.date.today().strftime('%d%M%Y')).pack()))
+    kb.add(InlineKeyboardButton(text="Расписание", callback_data=cb_days(date=datetime.date.today().strftime('%d.%m.%Y')).pack()))
     kb.add(InlineKeyboardButton(text="Назад", callback_data=cb_kurs(kurs=user[0]).pack()))
     kb.adjust(1)
     text = (f"Супер! \nРегистрация прошла успешно\n<i>Поиск по группе ({user[0]}: {user[1]})</i>"
