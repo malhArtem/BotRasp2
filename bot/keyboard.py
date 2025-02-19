@@ -1,6 +1,17 @@
 import datetime
 
 from aiogram.filters.callback_data import CallbackData
+from aiogram.types import InlineKeyboardButton
+
+
+def leaf_kb(builder, date):
+    ib1 = InlineKeyboardButton(text="👈", callback_data=cb_days(
+        date=(date - datetime.timedelta(days=1)).strftime('%d.%m.%Y')).pack())
+    ib2 = InlineKeyboardButton(text="👉", callback_data=cb_days(
+        date=(date + datetime.timedelta(days=1)).strftime('%d.%m.%Y')).pack())
+    builder.row(ib1, ib2)
+    return builder
+
 
 class cb_kurs(CallbackData, prefix="kurs"):
     kurs: str

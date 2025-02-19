@@ -60,7 +60,7 @@ async def get_teach_rasp(day, message, db: DB):
     return text
 
 
-async def day_rasp(message: types.Message, day, db: DB):
+async def student_rasp(message: types.Message, day, db: DB):
     user = await db.get_user(message.from_user.id)
     ch_or_zn = chisl_or_znam(day)  # узнаем какая сейчас неделя: числитель или знаменатель
     rasp = list(await db.get_rasp(day.weekday(), user[0],

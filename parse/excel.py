@@ -67,11 +67,6 @@ def parse_kurs(col_begin, db):
                     if len(split_spec[i]) > 1:
                         para[2] += split_spec[i][0].upper()
 
-                # for i in range(1, len(para[3])):
-                #     if para[3][len(para[3]) - i].isalpha() and para[3][len(para[3]) - i] != '.':
-                #         para[3] = para[3][len(para[3]) - i + 2:]
-                #         break
-
                 if para[3] != '':
                     if para[3].split()[0] == "Группа" and len(para[3].split()) > 1:
                         para[3] = para[3].split()[1:]
