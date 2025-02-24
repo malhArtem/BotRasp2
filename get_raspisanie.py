@@ -68,13 +68,16 @@ async def student_rasp(message: types.Message, day, db: DB):
     # temp_rasp = []
     # [temp_rasp.append(x) for x in rasp if x not in temp_rasp]
     # rasp = temp_rasp
-
-    text = f'<b><u>📆 {number_in_days.get(day.weekday())}</u></b>'
-    text = f'<i>{user[0]} {user[1]}   [{day.strftime("%d.%m.%Y")}]</i>\n' + text
+    text = f'📆 {day.strftime("%d.%m.%Y")}\n'
+    text += f'⏳ <u><b>{number_in_days.get(day.weekday())}</b></u>'
     if ch_or_zn == 4:
-        text = text + '(числитель):\n'
+        text = text + ' | числитель\n'
     else:
-        text = text + '(знаменатель):\n'
+        text = text + ' | знаменатель\n'
+    text += f'👥 {user[0]} | {user[1]}\n'
+
+    # text += f'{day.strftime("%d.%m.%Y")}\n'
+
     j = 1
 
     for l in range(1, len(rasp)):
@@ -91,7 +94,6 @@ async def student_rasp(message: types.Message, day, db: DB):
                                                        ch_or_zn + 2])) or (rasp[i][ch_or_zn] is not None and k == 0):
                 text = text + f"\n<blockquote>🕙 <b><i>{rasp[i][1]}</i>:</b>\n"
 
-
                 text += f"📚 {normalize(rasp[i][ch_or_zn])}"
                 if rasp[i][ch_or_zn + 1]:
                     text += f'\n👨‍🏫 {normalize(rasp[i][ch_or_zn + 1])}'
@@ -102,36 +104,9 @@ async def student_rasp(message: types.Message, day, db: DB):
                     text = text + f"({k + 1})</blockquote>"
                 else:
                     text = text + "</blockquote>"
-                # if len(normalize(rasp[i][ch_or_zn + 1])) + len(normalize(rasp[i][ch_or_zn + 2])) > 0:
-                #     if len(normalize(rasp[i][ch_or_zn + 1])) + len(normalize(rasp[i][ch_or_zn + 2])) < 31 and len(
-                #             normalize(rasp[i][ch_or_zn])) \
-                #             + len(normalize(rasp[i][ch_or_zn + 1])) + len(normalize(rasp[i][ch_or_zn + 2])) > 31:
-                #         text = text + f'{normalize(rasp[i][ch_or_zn])}\n{normalize(rasp[i][ch_or_zn + 1])} [{normalize(rasp[i][ch_or_zn + 2])}]'
-                #
-                #     elif (len(normalize(rasp[i][ch_or_zn])) + len(normalize(rasp[i][ch_or_zn + 1])) + len(
-                #             normalize(rasp[i][ch_or_zn + 2])) < 27) \
-                #             or (
-                #             len((normalize(rasp[i][ch_or_zn]))) < 20 and len(normalize(rasp[i][ch_or_zn + 1])) + len(
-                #         normalize(rasp[i][ch_or_zn + 2])) < 19):
-                #         if len((normalize(rasp[i][ch_or_zn]))) > 13:
-                #             text = text + f'{normalize(rasp[i][ch_or_zn])[:13]}... {normalize(rasp[i][ch_or_zn + 1])} [{normalize(rasp[i][ch_or_zn + 2])}]'
-                #         else:
-                #             text = text + f'{normalize(rasp[i][ch_or_zn])[:13]} {normalize(rasp[i][ch_or_zn + 1])} [{normalize(rasp[i][ch_or_zn + 2])}]'
-                #     elif len(normalize(rasp[i][ch_or_zn + 2])) and len(normalize(rasp[i][ch_or_zn])) + len(
-                #             normalize(rasp[i][ch_or_zn + 1])) < 31:
-                #         text = text + f'{normalize(rasp[i][ch_or_zn])} {normalize(rasp[i][ch_or_zn + 1])}\n[{normalize(rasp[i][ch_or_zn + 2])}]'
-                #
-                #     elif len(normalize(rasp[i][ch_or_zn])) + len(normalize(rasp[i][ch_or_zn + 1])) > 31 and len(
-                #             normalize(rasp[i][ch_or_zn + 1])) + len(normalize(rasp[i][ch_or_zn + 2])) > 31:
-                #         text = text + f'{normalize(rasp[i][ch_or_zn])}\n{normalize(rasp[i][ch_or_zn + 1])}\n[{normalize(rasp[i][ch_or_zn + 2])}]'
-                #
-                #     else:
-                #         text = text + f'{normalize(rasp[i][ch_or_zn])} {normalize(rasp[i][ch_or_zn + 1])} [{normalize(rasp[i][ch_or_zn + 2])}]'
-                # else:
-                #     text = text + f'{normalize(rasp[i][ch_or_zn])}'
 
-
-    if text[-3] == ':':
-        text += "На сегодня занятий не наблюдается...\nОтличный день для отдыха!\n\n"
+    pairs = [day[ch_or_zn] for day in rasp ]
+    if not rasp or not any(pairs):
+        text += "\n<blockquote>Сегодня отличный день для отдыха</blockquote>\n"
 
     return text
