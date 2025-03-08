@@ -5,6 +5,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 
 from bot.commands import set_commands
+from bot.middlewares import StepsCallbackMiddleware, StepsMessageMiddleware
 from config import TOKEN, admins_id
 from db import DB
 from bot.handlers.registration import router as reg_router
@@ -31,6 +32,8 @@ async def main():
     db = DB("rasp")
     await set_commands(bot)
     await bot.send_message(admins_id, "Бот запущен")
+    dp.callback_query.middleware(StepsCallbackMiddleware())
+    dp.message.middleware(StepsMessageMiddleware())
     await dp.start_polling(bot, db=db)
 
 

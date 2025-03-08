@@ -4,12 +4,17 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton
 
 
-def leaf_kb(builder, date):
+def leaf_kb(builder, date, last_step):
     ib1 = InlineKeyboardButton(text="👈", callback_data=cb_days(
         date=(date - datetime.timedelta(days=1)).strftime('%d.%m.%Y')).pack())
+
     ib2 = InlineKeyboardButton(text="👉", callback_data=cb_days(
         date=(date + datetime.timedelta(days=1)).strftime('%d.%m.%Y')).pack())
-    builder.row(ib1, ib2)
+    if last_step is not None:
+        back = InlineKeyboardButton(text="Назад", callback_data=last_step.pack())
+        builder.row(ib1, back, ib2)
+    else:
+        builder.row(ib1, ib2)
     return builder
 
 
@@ -41,6 +46,7 @@ class cb_pag_teacher(CallbackData, prefix="pag"):
 
 class cb_days(CallbackData, prefix="date"):
     date: str
+    is_step: bool = False
 
 # cb_kurs = CallbackData("kurs", "number")
 # cb_group = CallbackData("group", "kurs", "groups")

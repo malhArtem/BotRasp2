@@ -1,4 +1,5 @@
 import datetime
+from datetime import timedelta
 
 from aiogram import Router, F, types, Bot
 from aiogram.filters import Command
@@ -36,7 +37,7 @@ async def user_reg_kurs(message: types.Message, db: DB, bot: Bot):
 
 
 @router.callback_query(cb_kurs.filter())
-async def user_reg_group(callback_query: types.CallbackQuery, callback_data: cb_kurs, db: DB, bot: Bot):
+async def user_reg_group(callback_query: types.CallbackQuery, callback_data: cb_kurs, db: DB, last_step):
     groups = await db.get_groups(callback_data.kurs)
     groups.sort()
     # if callback_data.get('number') == "СПО":
@@ -127,16 +128,24 @@ async def user_reg_teach(callback_query: types.CallbackQuery, callback_data: cb_
 
 
 @router.callback_query(cb_teacher.filter())
-async def reg_teacher(callback_query: types.CallbackQuery, callback_data: cb_teacher, db: DB, bot: Bot):
+async def reg_teacher(callback_query: types.CallbackQuery, callback_data: cb_teacher, db: DB, last_step):
     user = list(await db.get_user(callback_query.from_user.id))
     user[3] = callback_data.name
     await db.update_profile(callback_query, user)
     await callback_query.answer()
 
     kb = InlineKeyboardBuilder()
-    kb.add(InlineKeyboardButton(text="Расписание", callback_data=cb_days(date=datetime.date.today().strftime('%d.%m.%Y')).pack()))
-    kb.add(InlineKeyboardButton(text="Назад", callback_data=cb_pag_teacher(pag=0).pack()))
-    kb.adjust(1)
+    kb.adjust(2)
+    kb.row((InlineKeyboardButton(text="На сегодня",
+                                 callback_data=cb_days(date=datetime.date.today().strftime('%d.%m.%Y'),
+                                                       is_step=True).pack())),
+           (InlineKeyboardButton(text="На завтра", callback_data=cb_days(
+               date=(datetime.date.today() + timedelta(days=1)).strftime('%d.%m.%Y'), is_step=True).pack())))
+
+    if last_step is not None:
+        kb.row(InlineKeyboardButton(text="Назад", callback_data=last_step.pack()))
+    # kb.add(InlineKeyboardButton(text="Назад", callback_data=cb_pag_teacher(pag=0).pack()))
+    # kb.adjust(2)
     text = f"""Супер! \nРегистрация прошла успешно\n<i>Поиск по преподавателю ({user[3]})</i> \n\nТак же /communication позволит Вам узнать номера деканата и кафедр и связаться с нами если обнаружите ошибку :)"""
     try:
         await callback_query.message.edit_text(text, reply_markup=kb.as_markup())
@@ -145,7 +154,7 @@ async def reg_teacher(callback_query: types.CallbackQuery, callback_data: cb_tea
 
 
 @router.callback_query(cb_group.filter())
-async def user_reg(callback_query: types.CallbackQuery, callback_data: cb_group, db: DB):
+async def user_reg(callback_query: types.CallbackQuery, callback_data: cb_group, db: DB, last_step):
     db.create_table_users()
     await db.create_profile_student(callback_query, callback_data.kurs, callback_data.group)
     user = list(await db.get_user(callback_query.from_user.id))
@@ -158,9 +167,14 @@ async def user_reg(callback_query: types.CallbackQuery, callback_data: cb_group,
 
     kb = InlineKeyboardBuilder()
 
-    kb.add(InlineKeyboardButton(text="Расписание", callback_data=cb_days(date=datetime.date.today().strftime('%d.%m.%Y')).pack()))
-    kb.add(InlineKeyboardButton(text="Назад", callback_data=cb_kurs(kurs=user[0]).pack()))
-    kb.adjust(1)
+    # kb.add(InlineKeyboardButton(text="Расписание", callback_data=cb_days(date=datetime.date.today().strftime('%d.%m.%Y'), is_step=True).pack()))
+    kb.row((InlineKeyboardButton(text="На сегодня", callback_data=cb_days(date=datetime.date.today().strftime('%d.%m.%Y'), is_step=True).pack())),
+            (InlineKeyboardButton(text="На завтра", callback_data=cb_days(date=(datetime.date.today()+timedelta(days=1)).strftime('%d.%m.%Y'), is_step=True).pack())))
+    kb.adjust(2)
+
+    # kb.add(InlineKeyboardButton(text="Назад", callback_data=cb_kurs(kurs=user[0]).pack()))
+    if last_step is not None:
+        kb.row(InlineKeyboardButton(text="Назад", callback_data=last_step.pack()))
     text = (f"Супер! \nРегистрация прошла успешно\n<i>Поиск по группе ({user[0]}: {user[1]})</i>"
             f"\n\n"
             f"Так же /communication позволит Вам узнать номера деканата и кафедр и связаться с нами если обнаружите ошибку :)")

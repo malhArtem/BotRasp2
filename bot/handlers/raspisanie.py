@@ -28,7 +28,7 @@ async def today_rasp(message: types.Message, db: DB):
         today = datetime.datetime.now()  # получаем дату на момент написания сообщения
         text = await day_rasp(user, message, today, db)
 
-        ikb = leaf_kb(ikb, today)
+        ikb = leaf_kb(ikb, today, None)
 
     else:
         text = "Вы не зарегистрированы"
@@ -38,7 +38,7 @@ async def today_rasp(message: types.Message, db: DB):
 
 
 @router.message(Command("next_day"))
-async def next_day_rasp(message: types.Message, db: DB):
+async def next_day_rasp(message: types.Message, db: DB, last_step):
     user = await db.get_user(message.from_user.id)
     ikb = InlineKeyboardBuilder()
     if user is not None:
@@ -46,7 +46,7 @@ async def next_day_rasp(message: types.Message, db: DB):
         if day.weekday() == 6:
             day = day + datetime.timedelta(days=1)
         text = await day_rasp(user, message, day, db)
-        ikb = leaf_kb(ikb, day)
+        ikb = leaf_kb(ikb, day, last_step)
 
     else:
         text = "Вы не зарегистрированы"
@@ -145,7 +145,7 @@ async def choose_day(callback_query: types.CallbackQuery, callback_data: cb_mont
 
 
 @router.callback_query(cb_days.filter())
-async def date_rasp(callback_query: types.CallbackQuery, callback_data: cb_days, db: DB):
+async def date_rasp(callback_query: types.CallbackQuery, callback_data: cb_days, db: DB, last_step):
     date = datetime.datetime.strptime(callback_data.date, '%d.%m.%Y')
     user = await db.get_user(callback_query.from_user.id)
 
@@ -155,6 +155,6 @@ async def date_rasp(callback_query: types.CallbackQuery, callback_data: cb_days,
         text = await get_teach_rasp(date, callback_query, db)
 
     ikb = InlineKeyboardBuilder()
-    ikb = leaf_kb(ikb, date)
+    ikb = leaf_kb(ikb, date, last_step)
     await callback_query.answer()
     await callback_query.message.edit_text(text=text, reply_markup=ikb.as_markup())
