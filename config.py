@@ -1,6 +1,6 @@
 import datetime
 
-TOKEN = "6651936308:AAFHU0yy7FsY1wlf0NH2sh6wv2_FdteHCoc"
+TOKEN = ""
 day_chisl = datetime.datetime(2023, 9, 10)
 admins_id = '517922464'
 
