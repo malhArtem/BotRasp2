@@ -1,8 +1,8 @@
 import openpyxl
-from aiogram import Bot, types
+from aiogram import types
 from openpyxl.cell import MergedCell
 
-from config import days_in_number
+from config import config
 from db import DB
 from parse.utils import cut_teach
 
@@ -59,7 +59,7 @@ def parse_kurs(col_begin, db):
                 except Exception as e:
                     para.extend([cell_value(sheet, row + 1, col), None, None])
 
-                para[0] = days_in_number.get(para[0])
+                para[0] = config.days_in_number.get(para[0])
 
                 split_spec = para[2].split()
                 para[2] = ''
@@ -156,7 +156,7 @@ def parse_spo(db: DB):
 
                 para[0] = "".join(para[0].split('\n'))
                 para[0] = "".join(para[0].split())
-                para[0] = days_in_number.get(para[0].capitalize())
+                para[0] = config.days_in_number.get(para[0].capitalize())
 
                 split_spec = para[3].split()
                 para[3] = ''

@@ -6,7 +6,7 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from bot.keyboard import cb_days, cb_month, cb_day, leaf_kb
+from bot.keyboard import cb_days, cb_month, leaf_kb
 from db import DB
 from get_raspisanie import student_rasp, get_teach_rasp
 

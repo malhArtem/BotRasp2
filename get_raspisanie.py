@@ -2,7 +2,7 @@ import datetime
 
 from aiogram import types
 
-from config import number_in_days
+from config import config
 from db import DB
 from parse.utils import chisl_or_znam, normalize
 
@@ -30,7 +30,7 @@ async def get_teach_rasp(day, message, db: DB):
     temp_rasp = []
     [temp_rasp.append(x) for x in rasp if x not in temp_rasp]
     rasp = temp_rasp
-    text = text = f'📆 <b><u>{number_in_days.get(day.weekday())}</u></b>'
+    text = text = f'📆 <b><u>{config.number_in_days.get(day.weekday())}</u></b>'
     text = f'<i>{user[3]}   [{day.strftime("%d.%m.%Y")}]</i>\n' + text
     if ch_or_zn == 4:
         text = text + '(числитель):\n'
@@ -69,7 +69,7 @@ async def student_rasp(message: types.Message, day, db: DB):
     # [temp_rasp.append(x) for x in rasp if x not in temp_rasp]
     # rasp = temp_rasp
     text = f'📆 {day.strftime("%d.%m.%Y")}\n'
-    text += f'⏳ <u><b>{number_in_days.get(day.weekday())}</b></u>'
+    text += f'⏳ <u><b>{config.number_in_days.get(day.weekday())}</b></u>'
     if ch_or_zn == 4:
         text = text + ' | числитель\n'
     else:

@@ -1,11 +1,11 @@
-from config import day_chisl, sokr
+from config import config
 
 
 def normalize(target_str):
     if target_str is None:
         target_str = ''
     # получаем заменяемое: подставляемое из словаря в цикле
-    for i, j in sokr.items():
+    for i, j in config.sokr.items():
         # меняем все target_str на подставляемое
         target_str = target_str.strip()
         target_str = (" ".join(target_str.split())).replace(i, j)
@@ -83,7 +83,7 @@ def cut_teach(s: str):
 
 
 def chisl_or_znam(now):
-    delta = now - day_chisl
+    delta = now - config.day_chisl
     if (delta.days // 7) % 2 == 0:
         return 4
     else:
