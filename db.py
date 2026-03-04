@@ -1,142 +1,149 @@
-import sqlite3 as sq
+import aiosqlite
 
-from aiogram import types
+from contextlib import asynccontextmanager
+from typing import AsyncGenerator, Iterable
 
+import models
+import errors
 
-class DB:
+async def create_tables(base_path: str):
+    db = DataBase(base_path)
+    async with db.db_cursor() as cursor:
+        await TeachersBase.create_table(cursor)
+        await UsersBase.create_table(cursor)
+        await ShedulesBase.create_table(cursor)
 
-    def create_table_users(self):
-        self.cur.execute("""CREATE TABLE IF NOT EXISTS users
-                             (user_id TEXT, username TEXT, name TEXT, kurs INTEGER, 
-                             groupp TEXT, st_or_teach INTEGER, teacher TEXT)""")
+class DataBase:
+    def __init__(self, path: str):
+        self.path = path
 
-        self.db.commit()
+    @asynccontextmanager
+    async def db_cursor(self, commit: bool = True) -> AsyncGenerator[aiosqlite.Cursor, None]:
+        async with aiosqlite.connect(self.path) as connection:
+            cursor = await connection.cursor()
+            yield cursor
 
-
-    def __init__(self, name: str):
-        self.db = sq.connect(name + '.db')
-        self.cur = self.db.cursor()
-        self.create_table_users()
-
-
-    def create_table_rasp(self, kurs):
-        self.cur.execute("""CREATE TABLE IF NOT EXISTS '{}' 
-                          (day TEXT, time TEXT,specialty TEXT, groupp TEXT, subj1 TEXT, 
-                          teach1 TEXT, clas1 TEXT, subj2 TEXT, teach3 TEXT, clas2 TEXT)""".format(kurs))
-
-        self.db.commit()
-
-
-    async def create_profile_student(self, message: types.CallbackQuery, kurs, group):
-        self.cur.execute("SELECT 1 FROM users WHERE user_id == '{}'"
-                    .format(message.from_user.id))
-
-        user = self.cur.fetchone()
-
-        if not user:
-            self.cur.execute("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?)",
-                        (message.from_user.id, message.from_user.username, message.from_user.full_name, kurs, group, 0, ''))
-            self.db.commit()
+            if commit:
+                await connection.commit()
 
 
-    async def create_profile_teacher(self, message: types.CallbackQuery, teacher):
-        self.cur.execute("SELECT 1 FROM users WHERE user_id == '{}'"
-                    .format(message.from_user.id))
-        user = self.cur.fetchone()
+class TeachersBase:
 
-        if not user:
-            self.cur.execute("INSERT INTO users VALUES(?, ?, ?, ?, ?, ?, ?)",
-                        (message.from_user.id, message.from_user.username, message.from_user.full_name, 0, 0, 1, teacher))
-            self.db.commit()
+    @staticmethod
+    async def create_table(cursor: aiosqlite.Cursor) -> None:
+        await cursor.execute(
+            """CREATE TABLE IF NOT EXISTS teachers (
+                teacher_id INTEGER PRIMARY KEY AUTOINCREMENT,
+                FIO TEXT
+            )"""
+        )
 
-
-    async def update_profile(self, callback_query: types.CallbackQuery, user: list):
-        self.cur.execute(
-            "UPDATE users SET username = '{}', name = '{}', kurs = '{}', groupp = '{}', "
-            "st_or_teach = '{}', teacher = '{}' WHERE user_id = '{}'"
-            .format(callback_query.from_user.username, callback_query.from_user.full_name, user[0], user[1], user[2],
-                    user[3], callback_query.from_user.id))
-        self.db.commit()
+    @staticmethod
+    async def get_teachers(cursor: aiosqlite.Cursor) -> Iterable[aiosqlite.Row]:
+        await cursor.execute("SELECT * FROM teachers")
+        return await cursor.fetchall()
 
 
-    async def delete_profile(self, user_id):
-        self.cur.execute("DELETE FROM users WHERE user_id = '{}'".format(user_id))
-        self.db.commit()
+class UsersBase:
+
+    @staticmethod
+    async def create_table(cursor: aiosqlite.Cursor) -> None:
+        await cursor.execute("PRAGMA foreign_keys = ON")
+        await cursor.execute(
+            """CREATE TABLE IF NOT EXISTS users (
+                user_id TEXT PRIMARY KEY,
+                username TEXT,
+                name TEXT,
+                year INTEGER,
+                groupp TEXT,
+                is_teacher INTEGER,
+                teacher INTEGER,
+
+                FOREIGN KEY (teacher_id) REFERENCES teachers (teacher_id) 
+                ON DELETE SET NULL
+            )"""
+        )
+
+    @staticmethod
+    async def create_profile(cursor: aiosqlite.Cursor, profile_data: models.Student | models.Teacher) -> None:
+        await cursor.execute(
+            "INSERT OR IGNORE INTO users (user_id, username, name, year, groupp, is_teacher, teacher) \
+                VALUES (?, ?, ?, ?, ?, ?, ?)", (
+                    profile_data.id,
+                    profile_data.username,
+                    profile_data.full_name,
+                    profile_data.year,
+                    profile_data.group,
+                    profile_data.is_teacher,
+                    profile_data.teacher_id,
+                )
+        )
+
+    @staticmethod
+    async def update_profile(cursor: aiosqlite.Cursor, profile_data: models.Student | models.Teacher) -> None:
+        await cursor.execute(
+            "UPDATE users SET username = ?, name = ?, year = ?, groupp = ?, is_teacher = ?, teacher = ? WHERE user_id = ?",
+            (
+                profile_data.username,
+                profile_data.full_name,
+                profile_data.year,
+                profile_data.group,
+                profile_data.is_teacher,
+                profile_data.teacher_id,
+                profile_data.id,
+            )
+        )
+        if not cursor.rowcount:
+            raise errors.UserNotFoundError()
+    
+    @staticmethod
+    async def get_profile(cursor: aiosqlite.Cursor, user_id: str) -> aiosqlite.Row:
+        await cursor.execute("SELECT year, groupp, is_teacher, teacher FROM users WHERE user_id = ?", (user_id,))
+        return await cursor.fetchone()
+    
+    @staticmethod
+    async def delete_profile(cursor: aiosqlite.Cursor, user_id: str) -> None:
+        await cursor.execute("DELETE FROM users WHERE user_id = ?", (user_id,))
 
 
-    def add_rasp(self, raw_table: list, kurs):
-        self.cur.execute("INSERT INTO '{}' VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)".format(kurs),
-                    (raw_table[0], raw_table[1], raw_table[2], raw_table[3], raw_table[4], raw_table[5], raw_table[6],
-                     raw_table[7], raw_table[8], raw_table[9]))
-        self.db.commit()
+class ShedulesBase:
 
+    @staticmethod
+    async def create_table(cursor: aiosqlite.Cursor) -> None:
+        await cursor.execute(
+            """CREATE TABLE IF NOT EXISTS shedules (
+                group_code TEXT,
+                day TEXT,
+                time TEXT,
+                subject TEXT,
+                auditory TEXT,
+                teacher TEXT,
+                UNIQUE(group_code, day, time)
+            )"""
+        )
 
-    async def get_rasp(self, day, kurs, group: str):
-        if kurs != 'СПО':
-            split_group = group.split()
-            specialty = split_group[0]
-            group_cut = split_group[-1]
-            print(group)
-            if specialty == group:
-                self.cur.execute("SELECT * FROM '{}' WHERE day = '{}' AND groupp = '{}'".format(kurs, day, group_cut))
-            elif group[-1].isdigit() or group[-1] == ')':
-                self.cur.execute("SELECT * FROM '{}' WHERE day = '{}' AND groupp = '{}'".format(kurs, day, group))
-            else:
-                self.cur.execute("SELECT * FROM '{}' WHERE day = '{}' AND groupp = '{}' AND specialty = '{}'".format(kurs, day,
-                                                                                                                group_cut,
-                                                                                                                specialty))
+    @staticmethod
+    async def set_pair(cursor: aiosqlite.Cursor, pair: models.Pair) -> None:
+        await cursor.execute(
+            "REPLACE INTO shedules (group_code, day, time, subject, auditory, teacher) \
+                VALUES (?, ?, ?, ?, ?, ?)", (
+                    pair.group,
+                    pair.day,
+                    pair.time.isoformat(),
+                    pair.subject,
+                    pair.auditory,
+                    pair.teacher,
+                )
+        )
 
-        else:
-            self.cur.execute("SELECT * FROM '{}' WHERE day = '{}' AND groupp = '{}'".format(kurs, day, group))
-
-        day_rasp = self.cur.fetchall()
-        return day_rasp
-
-
-    async def get_teachers(self):
-        kurses = await self.get_kurs()
-        teachers = list()
-        for kurs in kurses:
-            if kurs[1] != 'users' and not ('old' in kurs[1]):
-                self.cur.execute("SELECT DISTINCT teach1 FROM '{}' WHERE teach1 IS NOT NULL".format(kurs[1]))
-                teachers.extend(self.cur.fetchall())
-                self.cur.execute("SELECT DISTINCT teach3 FROM '{}' WHERE teach3 IS NOT NULL".format(kurs[1]))
-                teachers.extend(self.cur.fetchall())
-        unic_teach = list(set(teachers))
-        return unic_teach
-
-
-    async def get_user(self, user_id):
-        self.cur.execute("SELECT kurs, groupp, st_or_teach, teacher FROM users WHERE user_id = '{}'".format(user_id))
-        user = self.cur.fetchone()
-        return user
-
-
-    async def get_kurs(self):
-        self.cur.execute("SELECT * FROM sqlite_master WHERE type = 'table'")
-        return self.cur.fetchall()
-
-
-    async def get_groups(self, kurs):
-        self.cur.execute("SELECT DISTINCT groupp, specialty FROM '{}'".format(kurs))
-        groups = self.cur.fetchall()
-        self.db.commit()
-        return groups
-
-
-    async def rename_tables(self, kurs):
-        self.cur.execute("ALTER TABLE '{}' RENAME TO '{}'".format(kurs, kurs + '_old'))
-        self.db.commit()
-
-
-    async def delete_old(self):
-        tables = await self.get_kurs()
-        for table in tables:
-            if 'old' in table[1] and "СПО" not in table[1]:
-                self.cur.execute('DROP TABLE IF EXISTS "{}"'.format(table[1]))
-                self.db.commit()
-
-
-    async def delete_old_spo(self):
-        self.cur.execute('DROP TABLE IF EXISTS "СПО_old"')
-        self.db.commit()
+    @staticmethod
+    async def get_shedule(cursor: aiosqlite.Cursor, group_code: str) -> Iterable[aiosqlite.Row]:
+        await cursor.execute(
+            "SELECT day, time, subject, auditory, teacher FROM shedules WHERE group_code = ?", (group_code,)
+        )
+        return await cursor.fetchall()
+    
+    @staticmethod
+    async def get_groups(cursor: aiosqlite.Cursor) -> Iterable[aiosqlite.Row]:
+        await cursor.execute("SELECT group_code FROM shedules GROUP BY group_code")
+        return await cursor.fetchall()
