@@ -1,4 +1,3 @@
-import datetime
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
@@ -8,8 +7,8 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env")
 
 class Config:
-    day_chisl = datetime.datetime(2023, 9, 10)
-    number_in_days = {
+    count_from = "2026-03-02" # Понедельник, числитель
+    numbers_to_days = {
         0: 'Понедельник',
         1: 'Вторник',
         2: 'Среда',
@@ -18,7 +17,7 @@ class Config:
         5: 'Суббота',
         6: 'Воскресенье'
     }
-    days_in_number = {v: k for k, v in number_in_days.items()}
+    days_to_numbers = {v: k for k, v in numbers_to_days.items()}
 
     sokr = {
         "Математический": "Мат.",

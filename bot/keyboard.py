@@ -1,15 +1,14 @@
-import datetime
-
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton
 
+from typing import Literal
+from datetime import datetime
 
-def leaf_kb(builder, date):
-    ib1 = InlineKeyboardButton(text="👈", callback_data=cb_days(
-        date=(date - datetime.timedelta(days=1)).strftime('%d.%m.%Y')).pack())
-    ib2 = InlineKeyboardButton(text="👉", callback_data=cb_days(
-        date=(date + datetime.timedelta(days=1)).strftime('%d.%m.%Y')).pack())
-    builder.row(ib1, ib2)
+
+def leaf_buttons(builder):
+    back_button = InlineKeyboardButton(text="👈", callback_data=cb_days(move=-1).pack())
+    forward_button = InlineKeyboardButton(text="👉", callback_data=cb_days(move=1).pack())
+    builder.row(back_button, forward_button)
     return builder
 
 
@@ -39,8 +38,11 @@ class cb_pag_teacher(CallbackData, prefix="pag"):
     pag: int
 
 
-class cb_days(CallbackData, prefix="date"):
-    date: str
+class days_callback(CallbackData, prefix="move"):
+    move: Literal[-1, 1]
+
+class to_date_callback(CallbackData, prefix="date"):
+    date: datetime
 
 # cb_kurs = CallbackData("kurs", "number")
 # cb_group = CallbackData("group", "kurs", "groups")

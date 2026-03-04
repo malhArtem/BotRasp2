@@ -1,4 +1,4 @@
-from config import config
+from core.config import config
 
 
 def normalize(target_str):
@@ -82,9 +82,6 @@ def cut_teach(s: str):
     return split_s
 
 
-def chisl_or_znam(now):
+def is_numerator(now) -> bool:
     delta = now - config.day_chisl
-    if (delta.days // 7) % 2 == 0:
-        return 4
-    else:
-        return 7
+    return (delta.days // 7) % 2 == 0

@@ -6,7 +6,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from bot.keyboard import cb_kurs, cb_pag_teacher, cb_group, cb_teacher, cb_days
-from db import DB
+from database.db import DB
 
 router = Router()
 
