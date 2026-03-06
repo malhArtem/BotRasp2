@@ -214,3 +214,9 @@ class GroupsBase(DataBase):
         group = await cursor.fetchone()
         if not group: raise errors.GroupNotFoundError()
         return models.Group.model_validate(group)
+    
+    @staticmethod
+    async def get_groups(cursor: aiosqlite.Cursor) -> list[models.Group]:
+        await cursor.execute("SELECT * FROM groups")
+        groups = await cursor.fetchall()
+        return TypeAdapter(list[models.Group]).validate_python(groups)

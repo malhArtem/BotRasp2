@@ -19,6 +19,12 @@ class Config:
     }
     days_to_numbers = {v: k for k, v in numbers_to_days.items()}
 
+    study_levels = {
+        "СПО",
+        "Бакалавриат",
+        "Магистратура"
+    }
+
     sokr = {
         "Математический": "Мат.",
         "Ф   и   з   к   у   л   ь   т   у   р   а": "Физкультура",

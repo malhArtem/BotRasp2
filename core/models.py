@@ -11,16 +11,7 @@ WEEK_DAYS = Literal[
     "Суббота"
 ]
 
-STUDY_LEVELS = Literal[
-    "СПО",
-    "Бакалавриат",
-    "Магистратура"
-]
-
 ROLES = Literal["STUDENT", "TEACHER"]
-
-
-pairType = TypeVar("pairType", StudentPair, TeacherPair)
 
 class UserProfile(BaseModel):
     """
@@ -81,11 +72,13 @@ class Group(BaseModel):
     code: speciality abbriviature and group num. e.g. ISAP2
     """
     group_id: int | None = None
-    level: STUDY_LEVELS
+    level: str
     year: int
     code: str
 
-class Shedule(BaseModel, Generic(pairType)):
+pairType = TypeVar("pairType", StudentPair, TeacherPair)
+
+class Shedule(BaseModel, Generic[pairType]):
     numerator: list[pairType]
     denumerator: list[pairType]
 

@@ -1,12 +1,11 @@
 from core.config import config
-
+import core.models as models
 
 def normalize(target_str):
+    '''Сокращает названия предметов и курсов, согласно списку в конфиге'''
     if target_str is None:
         target_str = ''
-    # получаем заменяемое: подставляемое из словаря в цикле
     for i, j in config.sokr.items():
-        # меняем все target_str на подставляемое
         target_str = target_str.strip()
         target_str = (" ".join(target_str.split())).replace(i, j)
     return target_str
@@ -81,7 +80,19 @@ def cut_teach(s: str):
         split_s[2] = split_s[2].strip(',')
     return split_s
 
+def get_years(groups: list[models.Group], level: models.STUDY_LEVELS) -> set[int]:
+    '''Возвращает доступные года обучения для текущей ступени образования'''
+    return {
+        group.year
+        for group in groups
+        if group.level == level
+    }
 
-def is_numerator(now) -> bool:
-    delta = now - config.day_chisl
-    return (delta.days // 7) % 2 == 0
+def get_codes(groups: list[models.Group], level: models.STUDY_LEVELS, year: int) -> dict[str, int]:
+    '''Возврашает доступные направления с айди, по году обучения и ступени образования'''
+    return {
+        group.code: group.group_id
+        for group in groups
+        if group.level == level
+        and group.year == year
+    }

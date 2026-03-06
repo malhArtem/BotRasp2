@@ -19,6 +19,19 @@ def leaf_buttons(builder: InlineKeyboardBuilder):
     builder.row(back_button, forward_button)
     return builder
 
+class im_teacher_callback(CallbackData, prefix="im_a_teacher"): ...
+
+class level_callback(CallbackData, prefix="study_level"):
+    level: str
+
+class year_callback(CallbackData, prefix="study_year"):
+    year: int
+    level: str
+    cache: str
+
+class student_register_callback(CallbackData, prefix="student_end_register"):
+    group_id: int
+
 
 class cb_kurs(CallbackData, prefix="kurs"):
     kurs: str
