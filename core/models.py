@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Literal
+from typing import Literal, Generic, TypeVar
 from datetime import datetime
 
 WEEK_DAYS = Literal[
@@ -19,6 +19,8 @@ STUDY_LEVELS = Literal[
 
 ROLES = Literal["STUDENT", "TEACHER"]
 
+
+pairType = TypeVar("pairType", StudentPair, TeacherPair)
 
 class UserProfile(BaseModel):
     """
@@ -83,12 +85,12 @@ class Group(BaseModel):
     year: int
     code: str
 
-class Shedule(BaseModel):
-    numerator: list[Pair]
-    dennumerator: list[Pair]
+class Shedule(BaseModel, Generic(pairType)):
+    numerator: list[pairType]
+    denumerator: list[pairType]
 
-class StudentShedule(Shedule):
+class StudentShedule(Shedule[StudentPair]):
     owner: ROLES = "STUDENT"
 
-class TeacherShedule(Shedule):
+class TeacherShedule(Shedule[TeacherPair]):
     owner: ROLES = "TEACHER"

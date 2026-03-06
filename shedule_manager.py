@@ -12,24 +12,19 @@ class SheduleManager:
         return (self.day - self.start_counting).days % 14 > 6
     
     def _increment_day(self):
-        if ((self.day - self.start_counting).days + 1) % 7:
+        if self.day.weekday != 5:
             self.day += timedelta(1)
         else:
             self.day += timedelta(2)
 
     def _decrement_day(self):
-        if ((self.day - self.start_counting).days - 1) % 7:
+        if self.day.weekday:
             self.day -= timedelta(1)
         else:
             self.day -= timedelta(2)
 
     def get_shedule(self, date: datetime = None):
-        if date:
-            date = datetime.combine(date, time(0, 0))
-            week_day = ((date - self.start_counting).days - 1) % 7
-        else:
-            week_day = ((self.day - self.start_counting).days - 1) % 7
-
+        week_day = date.weekday if date else self.day.weekday
         week_day = config.numbers_to_days.get(week_day)
         week_type = "Числитель" if self._is_numerator() else "Знаменатель"
 
