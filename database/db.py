@@ -121,6 +121,7 @@ class ShedulesBase(DataBase):
     async def create_table(cursor: aiosqlite.Cursor) -> None:
         await cursor.execute(
             """CREATE TABLE IF NOT EXISTS shedules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 group_code TEXT,
                 day TEXT,
                 time TEXT,

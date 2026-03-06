@@ -30,6 +30,7 @@ class Teacher(BaseModel):
     FIO: str
 
 class Pair(BaseModel):
+    id: int
     group: str
     day: str
     time: datetime

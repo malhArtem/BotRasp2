@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 logging.basicConfig(
         level=logging.INFO,
-        format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
+        format="%(asctime)s: [%(levelname)s] %(name)s ->  %(message)s",
     )
 
 def load_routers(dp: Dispatcher):
@@ -24,18 +24,19 @@ def load_routers(dp: Dispatcher):
     for file in files:
         if file.endswith(".py"):
             try:
+                logger.info(f"Try load {file}")
                 router_file = importlib.import_module(f"bot.handlers.{file[:-3]}")
             except Exception as e:
-                logger.error(f"[X] Error with loading router {file}:\n > {e}")
+                logger.error(e, stack_info=True)
                 continue
 
             if hasattr(router_file, "router"):
                 router = getattr(router_file, "router")
                 dp.include_router(router)
-                logger.info(f"[O] Router {file} loaded")
+                logger.info(f"Router {file} loaded")
 
             else:
-                logger.warning(f"[!] File {file} its not a router!")
+                logger.warning(f"File {file} its not a router!")
             
 bot = Bot(settings.TOKEN, default=properties)
 dp = Dispatcher()

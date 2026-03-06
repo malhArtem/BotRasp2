@@ -5,19 +5,19 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from bot.keyboard import cb_kurs, cb_pag_teacher, cb_group, cb_teacher, cb_days
-from database.db import DB
+from bot.keyboard import cb_kurs, cb_pag_teacher, cb_group, cb_teacher, days_callback
+import database.db as db
 
 router = Router()
 
 @router.message(Command('start', 'register'))
 @router.callback_query(F.data=="kurs")
 @router.callback_query(F.data=="register")
-async def user_reg_kurs(message: types.Message, db: DB, bot: Bot):
-    builder = InlineKeyboardBuilder() # создание Inline-клавиатуры
+async def user_reg_kurs(message: types.Message, database: db.DataBase, bot: Bot):
+    builder = InlineKeyboardBuilder()
     kurses = await db.get_kurs()
     for kurs in kurses:
-        if kurs[1] != 'users' and not ('old' in kurs[1]):
+        if kurs[1] != 'users' and 'old' not in kurs[1]:
             ib = InlineKeyboardButton(text=kurs[1], callback_data=cb_kurs(kurs=kurs[1]).pack())  # создание Inline-кнопки
             builder.add(ib)  # добавление кнопки в клавиатуру
     ib = InlineKeyboardButton(text="Преподаватель", callback_data=cb_pag_teacher(pag=0).pack())

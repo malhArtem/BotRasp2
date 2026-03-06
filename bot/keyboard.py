@@ -1,13 +1,21 @@
 from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from typing import Literal
 from datetime import datetime
 
+class days_callback(CallbackData, prefix="move"):
+    move: Literal[-1, 1]
 
-def leaf_buttons(builder):
-    back_button = InlineKeyboardButton(text="👈", callback_data=cb_days(move=-1).pack())
-    forward_button = InlineKeyboardButton(text="👉", callback_data=cb_days(move=1).pack())
+LEAF_BUTTONS = [
+    InlineKeyboardButton(text="👈", callback_data=days_callback(move=-1).pack()),
+    InlineKeyboardButton(text="👉", callback_data=days_callback(move=1).pack())
+]
+
+def leaf_buttons(builder: InlineKeyboardBuilder):
+    back_button = InlineKeyboardButton(text="👈", callback_data=days_callback(move=-1).pack())
+    forward_button = InlineKeyboardButton(text="👉", callback_data=days_callback(move=1).pack())
     builder.row(back_button, forward_button)
     return builder
 
@@ -37,19 +45,5 @@ class cb_teacher(CallbackData, prefix="teacher"):
 class cb_pag_teacher(CallbackData, prefix="pag"):
     pag: int
 
-
-class days_callback(CallbackData, prefix="move"):
-    move: Literal[-1, 1]
-
 class to_date_callback(CallbackData, prefix="date"):
     date: datetime
-
-# cb_kurs = CallbackData("kurs", "number")
-# cb_group = CallbackData("group", "kurs", "groups")
-# cb_month = CallbackData("month", "number")
-# cb_day = CallbackData("day", "month", "number")
-# cb_teacher = CallbackData("teacher", "name")
-#
-# cb_pag_teacher = CallbackData("pag_teacher", "pag")
-#
-# cb_days = CallbackData("days", "date")
