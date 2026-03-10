@@ -1,23 +1,24 @@
-import datetime
+import asyncio
 
 from aiogram import Router, F, types
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from cachetools import TTLCache, cached
+from cashews import cache
 
 from bot import keyboard
 import database.db as db
 import core.models as models
 import parse.utils as utils
+import core.errors as errors
 from core.config import config
 
 router = Router()
-cache = TTLCache(10, 60) # 10 пользователей, 1 минута
+cache.setup("mem://") # используем память
 
-@cached
-async def get_groups(database: db.DataBase, _: str) -> list[models.Group]: #cache либа будет использовать 2 аргумент как ключ
+@cache(ttl="1m", key="groups:{key}") #cache либа будет использовать 2 аргумент как ключ
+async def get_groups(database: db.DataBase, key: str) -> list[models.Group]: 
     async with database.db_cursor(False) as cursor:
         return await db.GroupsBase.get_groups(cursor)
 
@@ -45,17 +46,27 @@ async def show_register(message: types.Message, edit: bool = False) -> None:
             reply_markup=key_builder.as_markup()
         )
 
-
 @router.message(Command('start', 'register'))
-async def register_handler(message: types.Message):
+async def register_handler(message: types.Message, database: db.DataBase):
     await message.delete()
-    await show_register(message)
+    try:
+        async with database.db_cursor(False) as cursor:
+            profile = await db.UsersBase.get_profile(cursor, message.from_user.id)
+            print(profile)
 
-@router.callback_query(F.data=="register")
+    except errors.UserNotFoundError:
+        await show_register(message)
+
+    else:
+        await message.answer(
+            "Perfecto! Что будем делать?",
+            reply_markup=keyboard.student_menu().as_markup()
+        )
+
+@router.callback_query(keyboard.register_callback.filter())
 async def register_callback(callback: types.CallbackQuery):
     await show_register(callback.message, True)
     await callback.answer()
-
 
 @router.callback_query(keyboard.level_callback.filter())
 async def register_year(callback_query: types.CallbackQuery, callback_data: keyboard.level_callback, database: db.DataBase):
@@ -69,8 +80,8 @@ async def register_year(callback_query: types.CallbackQuery, callback_data: keyb
                 text=str(year),
                 callback_data=keyboard.year_callback(
                     year=year,
-                    level=callback_data,
-                    cache=str(year) + callback_data
+                    level=callback_data.level,
+                    cache=str(year) + callback_data.level
                 ).pack()
             )
         )
@@ -88,6 +99,7 @@ async def register_group(callback_query: types.CallbackQuery, callback_data: key
     key_builder = InlineKeyboardBuilder()
 
     for group in groups:
+        print(type(group), group)
         key_builder.add(
             InlineKeyboardButton(
                 text=group.code,
@@ -107,13 +119,14 @@ async def student_end_registration(
     callback_data: keyboard.student_register_callback,
     database: db.DataBase
 ):  
-    user = callback_query.message.from_user
+    user = callback_query.from_user
     user_profile = models.UserProfile(
-        user.id,
-        user.username,
-        user.full_name,
-        callback_data.group_id
+        user_id=user.id,
+        username=user.username,
+        full_name=user.full_name,
+        group_id=callback_data.group_id
     )
+    print(user_profile)
     async with database.db_cursor() as cursor:
         await db.UsersBase.create_profile(cursor, user_profile)
 

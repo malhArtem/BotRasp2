@@ -19,6 +19,8 @@ class Config:
     }
     days_to_numbers = {v: k for k, v in numbers_to_days.items()}
 
+    administrators = {6028124153}
+
     study_levels = {
         "СПО",
         "Бакалавриат",

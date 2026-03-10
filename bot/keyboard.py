@@ -2,22 +2,26 @@ from aiogram.filters.callback_data import CallbackData
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from typing import Literal
 from datetime import datetime
 
 class days_callback(CallbackData, prefix="move"):
-    move: Literal[-1, 1]
-
-LEAF_BUTTONS = [
-    InlineKeyboardButton(text="👈", callback_data=days_callback(move=-1).pack()),
-    InlineKeyboardButton(text="👉", callback_data=days_callback(move=1).pack())
-]
+    move: int
 
 def leaf_buttons(builder: InlineKeyboardBuilder):
     back_button = InlineKeyboardButton(text="👈", callback_data=days_callback(move=-1).pack())
     forward_button = InlineKeyboardButton(text="👉", callback_data=days_callback(move=1).pack())
     builder.row(back_button, forward_button)
     return builder
+
+def student_menu() -> InlineKeyboardBuilder:
+    key_builder = InlineKeyboardBuilder()
+    key_builder.add(
+        InlineKeyboardButton(text="На сегодня", callback_data=to_date_callback(date=datetime.today().strftime("%d-%m-%Y")).pack())
+    )
+    key_builder.adjust(1)
+    return key_builder
+
+class register_callback(CallbackData, prefix="registration"): ...
 
 class im_teacher_callback(CallbackData, prefix="im_a_teacher"): ...
 
@@ -59,4 +63,4 @@ class cb_pag_teacher(CallbackData, prefix="pag"):
     pag: int
 
 class to_date_callback(CallbackData, prefix="date"):
-    date: datetime
+    date: str

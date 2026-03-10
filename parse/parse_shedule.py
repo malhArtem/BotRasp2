@@ -45,7 +45,10 @@ def _parse_teacher_shedule(shedule: models.Shedule) -> dict[str, dict[str, str]]
         
 
 def _parse_student_shedule(shedule: models.Shedule) -> dict[str, dict[str, str]]:
-    group = shedule.numerator[0].group
+    group = ""
+    if shedule.numerator: group = shedule.numerator[0].group
+    elif shedule.denumerator: group = shedule.denumerator[0].group
+
     free_day_message = f"🧑‍🎓 {group}\nПар не наблюдается 🎉\nСидим не рыпаемся 💤"
     parsed = {}
 
@@ -68,5 +71,4 @@ def _parse_student_shedule(shedule: models.Shedule) -> dict[str, dict[str, str]]
         days[pair.day] += f"📚 {pair.subject}\n"
         days[pair.day] += f"📍 {pair.auditory}\n```\n"
     parsed["Знаменатель"] = days
-
     return parsed

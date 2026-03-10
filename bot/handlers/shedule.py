@@ -6,19 +6,18 @@ from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from cachetools import TTLCache, cached
+from cashews import cache
 
 from core import errors
 from parse.parse_shedule import get_parsed_shedule
 from shedule_manager import SheduleManager
-from bot.keyboard import cb_month, days_callback, leaf_buttons, to_date_callback
+from bot.keyboard import cb_month, days_callback, leaf_buttons, to_date_callback, register_callback
 from database import db
 
 router = Router()
-cache = TTLCache(100, 600) # храним максимум 100 менеджеров расписаний максимум 10 минут
+cache.setup("mem://") # используем память
 
-
-@cached(cache)
+@cache(ttl="10m", key="shedules:{user_id}")
 async def get_user_shedule(user_id: int, database: db.DataBase) -> SheduleManager:
     parsed = await get_parsed_shedule(user_id, database)
     return SheduleManager(parsed)
@@ -26,6 +25,7 @@ async def get_user_shedule(user_id: int, database: db.DataBase) -> SheduleManage
 
 @router.message(Command("today"))
 async def today_shedule(message: types.Message, database: db.DataBase):
+    await message.delete()
     key_builder = InlineKeyboardBuilder()
     try:
         manager = await get_user_shedule(message.from_user.id, database)
@@ -35,7 +35,7 @@ async def today_shedule(message: types.Message, database: db.DataBase):
     except errors.UserNotFoundError:
         answer = "Вы не зарегистрированы"
         key_builder.add(
-            InlineKeyboardButton(text="3арегистрироваться", callback_data="register")
+            InlineKeyboardButton(text="3арегистрироваться", callback_data=register_callback().pack())
         )
 
     await message.answer(answer, reply_markup=key_builder.as_markup())
@@ -43,6 +43,7 @@ async def today_shedule(message: types.Message, database: db.DataBase):
 
 @router.message(Command("next_day"))
 async def next_day_rasp(message: types.Message, database: db.DataBase):
+    await message.delete()
     key_builder = InlineKeyboardBuilder()
     try:
         manager = await get_user_shedule(message.from_user.id, database)
@@ -52,7 +53,7 @@ async def next_day_rasp(message: types.Message, database: db.DataBase):
     except errors.UserNotFoundError:
         answer = "Вы не зарегистрированы"
         key_builder.add(
-            InlineKeyboardButton(text="3арегистрироваться", callback_data="register")
+            InlineKeyboardButton(text="3арегистрироваться", callback_data=register_callback().pack())
         )
 
     await message.answer(answer, reply_markup=key_builder.as_markup())
@@ -60,13 +61,14 @@ async def next_day_rasp(message: types.Message, database: db.DataBase):
 
 @router.message(Command("week"))
 async def week_rasp(message: types.Message, database: db.DataBase):
+    await message.delete()
     key_builder = InlineKeyboardBuilder()
     try:
         manager = await get_user_shedule(message.from_user.id, database)
         tmp_day = datetime.datetime.combine(
             datetime.datetime.today(),
             datetime.time(0, 0)
-        ) - datetime.timedelta(days=datetime.datetime.today().weekday)
+        ) - datetime.timedelta(days=datetime.datetime.today().weekday())
 
         for _ in range(6):
             await message.answer(
@@ -76,13 +78,14 @@ async def week_rasp(message: types.Message, database: db.DataBase):
 
     except errors.UserNotFoundError:
         key_builder.add(
-            InlineKeyboardButton(text="Зарегистрироваться", callback_data="register")
+            InlineKeyboardButton(text="Зарегистрироваться", callback_data=register_callback().pack())
         )
         await message.answer("Вы не зарегистрированы", reply_markup=key_builder.as_markup())
 
 
 @router.message(Command("next_week"))
 async def week_rasp(message: types.Message, database: db.DataBase):
+    await message.delete()
     key_builder = InlineKeyboardBuilder()
     try:
         manager = await get_user_shedule(message.from_user.id, database)
@@ -101,7 +104,7 @@ async def week_rasp(message: types.Message, database: db.DataBase):
 
     except errors.UserNotFoundError:
         key_builder.add(
-            InlineKeyboardButton(text="3арегистрироваться", callback_data="register")
+            InlineKeyboardButton(text="3арегистрироваться", callback_data=register_callback().pack())
         )
         await message.answer("Вы не зарегистрированы", reply_markup=key_builder.as_markup())
 
@@ -132,7 +135,7 @@ async def choose_month(message: types.Message, database: db.DataBase):
     except errors.UserNotFoundError:
         answer = "Вы не зарегистрированы"
         key_builder.row(
-            InlineKeyboardButton(text="Зарегистрироваться", callback_data="register")
+            InlineKeyboardButton(text="Зарегистрироваться", callback_data=register_callback().pack())
         )
         
     if isinstance(message, types.Message):
@@ -167,7 +170,7 @@ async def choose_day(callback_query: types.CallbackQuery, callback_data: cb_mont
 @router.callback_query(to_date_callback.filter())
 async def switch_to_date(callback_query: types.CallbackQuery, callback_data: to_date_callback, database: db.DataBase):
     manager = await get_user_shedule(callback_query.from_user.id, database)
-    answer = manager.get_shedule(callback_data.date)
+    answer = manager.get_shedule(datetime.datetime.strptime(callback_data.date, "%d-%m-%Y"))
 
     key_builder = leaf_buttons(InlineKeyboardBuilder())
     await callback_query.answer()
@@ -175,8 +178,8 @@ async def switch_to_date(callback_query: types.CallbackQuery, callback_data: to_
 
 
 @router.callback_query(days_callback.filter())
-async def date_rasp(callback_query: types.CallbackQuery, callback_data: days_callback, database: db.DataBase):
-    manager = await get_user_shedule(callback_query.from_user.id, database)
+async def date_rasp(callback: types.CallbackQuery, callback_data: days_callback, database: db.DataBase):
+    manager = await get_user_shedule(callback.from_user.id, database)
 
     if callback_data.move == -1:
         answer = manager.prev_shedule()
@@ -184,5 +187,4 @@ async def date_rasp(callback_query: types.CallbackQuery, callback_data: days_cal
         answer = manager.next_shedule()
 
     key_builder = leaf_buttons(InlineKeyboardBuilder())
-    await callback_query.answer()
-    await callback_query.message.edit_text(text=answer, reply_markup=key_builder.as_markup())
+    await callback.message.edit_text(text=answer, reply_markup=key_builder.as_markup())

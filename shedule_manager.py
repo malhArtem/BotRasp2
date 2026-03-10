@@ -24,7 +24,7 @@ class SheduleManager:
             self.day -= timedelta(2)
 
     def get_shedule(self, date: datetime = None):
-        week_day = date.weekday if date else self.day.weekday
+        week_day = date.weekday() if date else self.day.weekday()
         week_day = config.numbers_to_days.get(week_day)
         week_type = "Числитель" if self._is_numerator() else "Знаменатель"
 

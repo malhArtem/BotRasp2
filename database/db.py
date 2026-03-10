@@ -69,7 +69,7 @@ class UsersBase(DataBase):
             CREATE TABLE IF NOT EXISTS users (
                 user_id TEXT PRIMARY KEY,
                 username TEXT,
-                name TEXT,
+                full_name TEXT,
                 group_id INTEGER,
                 teacher_id INTEGER,
 
@@ -81,7 +81,7 @@ class UsersBase(DataBase):
     @staticmethod
     async def create_profile(cursor: aiosqlite.Cursor, profile_data: models.UserProfile) -> None:
         await cursor.execute(
-            "INSERT OR IGNORE INTO users (user_id, username, name, group_id, teacher_id) \
+            "INSERT OR IGNORE INTO users (user_id, username, full_name, group_id, teacher_id) \
                 VALUES (?, ?, ?, ?, ?)", (
                     profile_data.user_id,
                     profile_data.username,
@@ -96,7 +96,7 @@ class UsersBase(DataBase):
     @staticmethod
     async def update_profile(cursor: aiosqlite.Cursor, profile_data: models.UserProfile) -> None:
         await cursor.execute(
-            "UPDATE users SET username = ?, name = ?, group_id = ?, teacher_id = ? WHERE user_id = ?",
+            "UPDATE users SET username = ?, full_name = ?, group_id = ?, teacher_id = ? WHERE user_id = ?",
             (
                 profile_data.username,
                 profile_data.full_name,
@@ -190,7 +190,7 @@ class GroupsBase(DataBase):
         await cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS groups (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                group_id INTEGER PRIMARY KEY AUTOINCREMENT,
                 level TEXT,
                 year INTEGER,
                 code TEXT,

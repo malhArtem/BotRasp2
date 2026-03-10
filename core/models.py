@@ -22,11 +22,11 @@ class UserProfile(BaseModel):
     teacher_id: ref. on teachers table or None
     """
 
-    user_id: str
+    user_id: int
     username: str
     full_name: str
-    group_id: int
-    teacher_id: int
+    group_id: int | None = None
+    teacher_id: int | None = None
 
 class Teacher(BaseModel):
     """
