@@ -3,7 +3,6 @@ from aiogram.filters import Command
 from core.config import config
 import bot.admin_keyboard as keyboard
 
-from aiogram.utils.keyboard import InlineKeyboardBuilder
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
@@ -17,17 +16,17 @@ router = Router()
 
 @router.message(Command('admin'))
 async def admin_panel(message: types.Message):
-    if message.from_user.id not in config.administrators: return
+    if message.from_user.id not in config.administration.admins: return
     
     await message.delete()
     await message.answer(
-        text="Админ-панель", reply_markup=keyboard.admin_panel().as_markup()
+        text=config.text.admin_title, reply_markup=keyboard.admin_panel().as_markup()
     )
 
 @router.callback_query(keyboard.add_group_callback.filter())
 async def add_group(callback: types.CallbackQuery, state: FSMContext):
     await callback.message.edit_text(
-        text="Введите ступень обучения, курс, код направления (для отображения). Прим: `СПО 2 ИСИП2`"
+        text=config.text.admin_add_group
     )
     await state.update_data(parent_message_id=callback.message.message_id)
     await state.set_state(NewGroup.info)
@@ -41,7 +40,7 @@ async def process_add_group(message: types.Message, state: FSMContext, database:
     await message.delete()
     if len(group_data) != 3:
         await message.bot.edit_message_text(
-            text="Invalid data! Please again:",
+            text=config.text.invalid_data,
             chat_id=message.chat.id,
             message_id=parent_message_id
         )
@@ -58,7 +57,7 @@ async def process_add_group(message: types.Message, state: FSMContext, database:
         await db.GroupsBase.create_group(cursor, group)
 
     await message.bot.edit_message_text(
-        text="Успешно!\nЧто делаем дальше?",
+        text=config.text.success_operation,
         reply_markup=keyboard.admin_panel().as_markup(),
         chat_id=message.chat.id,
         message_id=parent_message_id

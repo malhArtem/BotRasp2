@@ -1,18 +1,17 @@
-import asyncio
-
-from aiogram import Router, F, types
+from aiogram import Router, types
 from aiogram.filters import Command
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 from cashews import cache
-
+from core.config import config
 from bot import keyboard
+
 import database.db as db
 import core.models as models
 import parse.utils as utils
 import core.errors as errors
-from core.config import config
+
 
 router = Router()
 cache.setup("mem://") # используем память
@@ -23,10 +22,10 @@ async def get_groups(database: db.DataBase, key: str) -> list[models.Group]:
         return await db.GroupsBase.get_groups(cursor)
 
 async def show_register(message: types.Message, edit: bool = False) -> None:
-    register_message = "Здравствуй, математик!\nПройди небольшую регистрацию и сможешь наблюдать свое расписание.\nВыбери свою ступень образования:"
+    register_message = config.text.new_user
     key_builder = InlineKeyboardBuilder()
 
-    for level in config.study_levels:
+    for level in config.database.study_levels:
         key_builder.add(
             InlineKeyboardButton(text=level, callback_data=keyboard.level_callback(level=level).pack())
         )
@@ -59,7 +58,7 @@ async def register_handler(message: types.Message, database: db.DataBase):
 
     else:
         await message.answer(
-            "Perfecto! Что будем делать?",
+            config.text.already_register,
             reply_markup=keyboard.student_menu().as_markup()
         )
 
@@ -88,7 +87,7 @@ async def register_year(callback_query: types.CallbackQuery, callback_data: keyb
     key_builder.adjust(3)
 
     await callback_query.message.edit_text(
-        text="Замечательно!\nВыбери свой курс:",
+        text=config.text.select_year,
         reply_markup=key_builder.as_markup()
     )
     await callback_query.answer()
@@ -108,7 +107,7 @@ async def register_group(callback_query: types.CallbackQuery, callback_data: key
         )
 
     await callback_query.message.edit_text(
-        text="Превосходно!!!\nВыбери своё направление:",
+        text=config.text.select_group,
         reply_markup=key_builder.as_markup()
     )
     await callback_query.answer()
@@ -131,116 +130,8 @@ async def student_end_registration(
         await db.UsersBase.create_profile(cursor, user_profile)
 
     await callback_query.message.edit_text(
-        text="Гениально!!!!! Вы успешно зарегестрировались в сервисе.\nЧто делаем дальше?"
+        text=config.text.done_register
     )
     await callback_query.answer()
     
-
-
-
-# @router.callback_query(_.filter())
-# async def user_reg_teach(callback_query: types.CallbackQuery, callback_data: cb_pag_teacher, db: DB):
-#     db.create_table_users()
-
-#     i_kb = InlineKeyboardBuilder()
-#     teachers = await db.get_teachers()
-#     teachers.sort()
-
-#     pag = callback_data.pag
-
-#     start = pag * 24
-#     stop = (pag + 1) * 24 if (pag + 1) * 24 < len(teachers) else len(teachers)
-#     for i in range(start, stop):
-#         ib = InlineKeyboardButton(text=str(teachers[i][0]), callback_data=cb_teacher(name=str(teachers[i][0])).pack())
-#         i_kb.add(ib)
-#     i_kb.adjust(2)
-#     spec_buttons = []
-
-#     if pag > 0:
-#         ib = InlineKeyboardButton(text="👈", callback_data=cb_pag_teacher(pag=pag - 1).pack())
-#         spec_buttons.append(ib)
-
-#     ib_back = InlineKeyboardButton(text="Назад", callback_data='kurs')
-#     spec_buttons.append(ib_back)
-#     if stop != len(teachers):
-#         ib = InlineKeyboardButton(text="👉", callback_data=cb_pag_teacher(pag=pag + 1).pack())
-#         spec_buttons.append(ib)
-
-#     i_kb.row(*spec_buttons)
-
-#     # db.create_table_users()
-#     await db.create_profile_teacher(callback_query, '')
-#     user = list(await db.get_user(callback_query.from_user.id))
-#     user[2] = 1
-#     user[3] = ''
-#     await db.update_profile(callback_query, user)
-#     text = "Замечательно\nНайдите себя в списке:\n"
-#     text += f"<i>\nСтраница <b>{pag + 1}</b></i>"
-#     if isinstance(callback_query, types.CallbackQuery):
-#         await callback_query.answer()
-#         # await callback_query.message.delete()
-#         await callback_query.message.edit_text(text, reply_markup=i_kb.as_markup())
-#     else:
-#         await callback_query.message.answer(text, reply_markup=i_kb.as_markup())
-
-
-# @router.callback_query(cb_teacher.filter())
-# async def reg_teacher(callback_query: types.CallbackQuery, callback_data: cb_teacher, db: DB, bot: Bot):
-#     user = list(await db.get_user(callback_query.from_user.id))
-#     user[3] = callback_data.name
-#     await db.update_profile(callback_query, user)
-#     await callback_query.answer()
-
-#     kb = InlineKeyboardBuilder()
-#     kb.add(InlineKeyboardButton(text="Расписание", callback_data=cb_days(date=datetime.date.today().strftime('%d.%m.%Y')).pack()))
-#     kb.add(InlineKeyboardButton(text="Назад", callback_data=cb_pag_teacher(pag=0).pack()))
-#     kb.adjust(1)
-#     text = f"""Супер! \nРегистрация прошла успешно\n<i>Поиск по преподавателю ({user[3]})</i> \n\nТак же /communication позволит Вам узнать номера деканата и кафедр и связаться с нами если обнаружите ошибку :)"""
-#     try:
-#         await callback_query.message.edit_text(text, reply_markup=kb.as_markup())
-#     except Exception:
-#         await callback_query.message.answer(text, reply_markup=kb.as_markup())
-
-
-# @router.callback_query(cb_group.filter())
-# async def user_reg(callback_query: types.CallbackQuery, callback_data: cb_group, db: DB):
-#     db.create_table_users()
-#     await db.create_profile_student(callback_query, callback_data.kurs, callback_data.group)
-#     user = list(await db.get_user(callback_query.from_user.id))
-#     user[0] = callback_data.kurs
-#     user[1] = callback_data.group
-#     user[2] = 0
-#     await db.update_profile(callback_query, user)
-#     await callback_query.answer()
-#     # await callback_query.message.delete()
-
-#     kb = InlineKeyboardBuilder()
-
-#     kb.add(InlineKeyboardButton(text="Расписание", callback_data=cb_days(date=datetime.date.today().strftime('%d.%m.%Y')).pack()))
-#     kb.add(InlineKeyboardButton(text="Назад", callback_data=cb_kurs(kurs=user[0]).pack()))
-#     kb.adjust(1)
-#     text = (f"Супер! \nРегистрация прошла успешно\n<i>Поиск по группе ({user[0]}: {user[1]})</i>"
-#             f"\n\n"
-#             f"Так же /communication позволит Вам узнать номера деканата и кафедр и связаться с нами если обнаружите ошибку :)")
-#     try:
-#         await callback_query.message.edit_text(text, reply_markup=kb.as_markup())
-#     except Exception:
-#         await callback_query.message.answer(text, reply_markup=kb.as_markup())
-
-
-# @router.callback_query(F.data=="Нет")
-# async def callback_no(callback_query: types.CallbackQuery, db: DB):
-#     user = list(await db.get_user(callback_query.from_user.id))
-#     if user[2] == 0:
-#         user[2] = 1
-#         text = f"Успешно \nПоиск по преподавателю ({user[3]})"
-#     else:
-#         user[2] = 0
-#         text = f"Успешно \nПоиск по группе ({user[0]}: {user[1]})"
-#     await db.update_profile(callback_query, user)
-#     await callback_query.answer()
-#     # await callback_query.message.delete()
-#     try:
-#         await callback_query.message.edit_text(text)
-#     except Exception:
-#         await callback_query.message.answer(text)
+# TODO регистрация для преподавателя
