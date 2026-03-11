@@ -1,4 +1,4 @@
-from aiogram import Router, types, F
+from aiogram import Router, types
 from aiogram.filters import Command
 from core.config import config
 import bot.admin_keyboard as keyboard
@@ -6,8 +6,8 @@ import bot.admin_keyboard as keyboard
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-import database.db as db
-from core import models as models
+from database import db
+from core import models
 
 class NewGroup(StatesGroup):
     info = State()

@@ -4,10 +4,12 @@ import importlib
 import os
 
 from aiogram import Bot, Dispatcher
+from aiogram.types import ErrorEvent
 from aiogram.client.default import DefaultBotProperties
 
 from bot.commands import set_commands
 from core.config import settings
+import core.exception_handlers as handlers
 import database.db as db
 
 properties = DefaultBotProperties(parse_mode="html")
@@ -41,6 +43,13 @@ def load_routers(dp: Dispatcher):
 bot = Bot(settings.TOKEN, default=properties)
 dp = Dispatcher()
 load_routers(dp)
+
+@dp.errors()
+async def errors_handler(error: ErrorEvent):
+    for exception, handler in handlers.EXCEPTION_HANDLERS.items():
+        if isinstance(error.exception, exception):
+            await handler(error)
+            return True
 
 async def main():
     database = db.DataBase("base.db")

@@ -5,7 +5,7 @@ from typing import AsyncGenerator, Any
 from pydantic import TypeAdapter
 
 import core.models as models
-import core.errors as errors
+from core import errors
 
 async def create_tables(db: DataBase):
     async with db.db_cursor() as cursor:
