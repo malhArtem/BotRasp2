@@ -22,4 +22,11 @@ async def get_groups(database: db.DataBase) -> list[models.Teacher]:
         return await db.TeachersBase.get_teachers(cursor)
     
 @router.callback_query(keyboard.im_teacher_callback.filter())
-async def search_teacher(message: types.Message, state: FSMContext, database: db.DataBase): ...
+async def search_teacher(message: types.Message, state: FSMContext, database: db.DataBase):
+    await message.edit_text(
+        config.text.input_teacher_fio
+    )
+    await state.set_state(SearchTeacher.fio)
+
+@router.message(SearchTeacher.fio)
+async def register_teacher(): ...
