@@ -3,13 +3,11 @@ import os
 
 from aiogram import Router, F, types, Bot
 
-from config import settings
-from db import DB
+from core.config import settings
+from database.db import DB
 from parse.excel import parse_xl, parse_spo
 
 router = Router()
-
-
 
 @router.message(F.document)  # отлавливаем сообщения являющиеся документом
 async def get_file_xl(message: types.Message, bot: Bot, db: DB):
@@ -37,7 +35,7 @@ async def get_file_xl(message: types.Message, bot: Bot, db: DB):
                     if kurs[1] != 'users' and kurs[1] != 'СПО':
                         await db.rename_tables(kurs[1])  # переименовывываем уже существующие таблицы с расписанием
                 await message.answer('Изменяем раписание')
-                parce = asyncio.create_task(parse_xl(message, db))# извлекаем данные из нового excel файла в базу данных
+                _ = asyncio.create_task(parse_xl(message, db))# извлекаем данные из нового excel файла в базу данных
                 # await message.answer('Расписание изменено')
                 # await get_all_diff()                             # сравниваем старое расписание с новым и отправляем различия пользователям
 

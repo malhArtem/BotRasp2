@@ -2,8 +2,8 @@ import openpyxl
 from aiogram import types
 from openpyxl.cell import MergedCell
 
-from config import config
-from db import DB
+from core.config import config
+from database.db import DB
 from parse.utils import cut_teach
 
 

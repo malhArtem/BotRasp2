@@ -1,3 +1,7 @@
 aiogram
+aiosqlite
 openpyxl
 pydantic-settings
+cashews
+pyyaml
+python-box
